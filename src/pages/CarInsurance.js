@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../DataContext';
+import { useLang } from '../LanguageContext';
 
 function isExpired(endDate) { return new Date(endDate) < new Date(); }
 function isExpiringSoon(endDate) {
@@ -9,6 +10,7 @@ function isExpiringSoon(endDate) {
 
 export default function CarInsurance() {
   const { cars, addCar, updateCar, deleteCar } = useData();
+  const { t } = useLang();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -52,7 +54,7 @@ export default function CarInsurance() {
       : expiring
       ? { background: '#fef3c7', color: '#d97706' }
       : { background: '#dcfce7', color: '#16a34a' };
-    const label = expired ? 'Expired' : expiring ? 'Expiring Soon' : 'Active';
+    const label = expired ? t.expired : expiring ? t.expiringSoon : t.active;
     return <span style={{ ...style, padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{label}</span>;
   };
 
@@ -60,38 +62,37 @@ export default function CarInsurance() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a1a2e' }}>Car Insurance</h1>
-          <p style={{ color: '#888', marginTop: 4 }}>Track vehicle insurance policies and expiration dates</p>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a1a2e' }}>{t.carInsuranceTitle}</h1>
+          <p style={{ color: '#888', marginTop: 4 }}>{t.carInsuranceSub}</p>
         </div>
-        <button className="btn btn-dark" onClick={openCreate}>+ Add Car</button>
+        <button className="btn btn-dark" onClick={openCreate}>+ {t.addCar}</button>
       </div>
 
-      {/* Search */}
       <div style={{ position: 'relative', marginBottom: 16 }}>
         <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }}>🔍</span>
-        <input className="search-bar" style={{ paddingLeft: 36, marginBottom: 0 }} placeholder="Search by car name or plate number..."
+        <input className="search-bar" style={{ paddingLeft: 36, marginBottom: 0 }} placeholder={t.searchCars}
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {filteredCars.length === 0 ? (
         <div style={{ background: 'white', borderRadius: 10, padding: '60px 20px', textAlign: 'center', border: '1px dashed #ddd' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🚗</div>
-          <div style={{ fontWeight: 600, color: '#555' }}>{search.trim() ? 'No cars found' : 'No cars registered'}</div>
+          <div style={{ fontWeight: 600, color: '#555' }}>{search.trim() ? t.noCarsFound : t.noCarsRegistered}</div>
           <div style={{ color: '#aaa', fontSize: 14, marginTop: 4 }}>
-            {search.trim() ? 'Try a different search term' : 'Add your first vehicle to track its insurance'}
+            {search.trim() ? t.tryDifferentSearch : t.addFirstVehicle}
           </div>
-          {!search.trim() && <button className="btn btn-dark" style={{ marginTop: 16 }} onClick={openCreate}>+ Add Car</button>}
+          {!search.trim() && <button className="btn btn-dark" style={{ marginTop: 16 }} onClick={openCreate}>+ {t.addCar}</button>}
         </div>
       ) : (
         <table className="table">
           <thead>
             <tr>
-              <th>Car</th>
-              <th>Plate Number</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Status</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
+              <th>{t.carCol}</th>
+              <th>{t.plateCol}</th>
+              <th>{t.startDate}</th>
+              <th>{t.endDate}</th>
+              <th>{t.statusCol}</th>
+              <th style={{ textAlign: 'right' }}>{t.actionsCol}</th>
             </tr>
           </thead>
           <tbody>
@@ -114,46 +115,44 @@ export default function CarInsurance() {
         </table>
       )}
 
-      {/* Add/Edit Modal */}
       {dialogOpen && (
         <div className="modal-overlay" onClick={() => setDialogOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 480 }}>
-            <div className="modal-title">{editing ? 'Edit Car Insurance' : 'Add Car Insurance'}</div>
+            <div className="modal-title">{editing ? t.editCarInsurance : t.addCarInsurance}</div>
             <div className="form-group">
-              <label>Car Name (Make and Model) *</label>
+              <label>{t.carName} *</label>
               <input value={carName} onChange={e => setCarName(e.target.value)} placeholder="e.g. Mercedes-Benz Sprinter" />
             </div>
             <div className="form-group">
-              <label>Plate Number *</label>
+              <label>{t.plateNumber} *</label>
               <input value={plateNumber} onChange={e => setPlateNumber(e.target.value)} placeholder="e.g. AA 123 BB" />
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label>Start Date *</label>
+                <label>{t.startDate} *</label>
                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
               </div>
               <div className="form-group">
-                <label>End Date *</label>
+                <label>{t.endDate} *</label>
                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
               </div>
             </div>
             <div className="modal-actions">
-              <button className="btn btn-gray" onClick={() => setDialogOpen(false)}>Cancel</button>
-              <button className="btn btn-dark" onClick={handleSubmit}>{editing ? 'Save Changes' : 'Add Car'}</button>
+              <button className="btn btn-gray" onClick={() => setDialogOpen(false)}>{t.cancel}</button>
+              <button className="btn btn-dark" onClick={handleSubmit}>{editing ? t.saveChanges : t.addCar}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirm Modal */}
       {deleteConfirmId && (
         <div className="modal-overlay" onClick={() => setDeleteConfirmId(null)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ width: 400 }}>
-            <div className="modal-title">Delete Car</div>
-            <p style={{ fontSize: 14, color: '#555', marginBottom: 20 }}>Are you sure you want to delete this car insurance record? This action cannot be undone.</p>
+            <div className="modal-title">{t.deleteCar}</div>
+            <p style={{ fontSize: 14, color: '#555', marginBottom: 20 }}>{t.deleteCarConfirm}</p>
             <div className="modal-actions">
-              <button className="btn btn-gray" onClick={() => setDeleteConfirmId(null)}>Cancel</button>
-              <button className="btn btn-red" onClick={() => { deleteCar(deleteConfirmId); setDeleteConfirmId(null); }}>Delete</button>
+              <button className="btn btn-gray" onClick={() => setDeleteConfirmId(null)}>{t.cancel}</button>
+              <button className="btn btn-red" onClick={() => { deleteCar(deleteConfirmId); setDeleteConfirmId(null); }}>{t.delete}</button>
             </div>
           </div>
         </div>

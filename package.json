@@ -20,8 +20,26 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron": "electron ."
-},
+    "electron": "electron .",
+    "electron:build": "react-scripts build && electron-builder"
+  },
+  "homepage": "./",
+  "build": {
+      "appId": "com.granimor.app",
+      "productName": "Granimor",
+      "files": [
+        "build/**/*",
+        "public/electron.js",
+        "node_modules/**/*"
+      ],
+      "directories": {
+        "output": "dist"
+      },
+      "win": {
+        "target": "portable",
+        "icon": "public/icon.ico"
+      }  
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -41,6 +59,7 @@
     ]
   },
   "devDependencies": {
-    "electron": "^40.8.0"
+    "electron": "^40.8.0",
+    "electron-builder": "^26.8.1"
   }
 }

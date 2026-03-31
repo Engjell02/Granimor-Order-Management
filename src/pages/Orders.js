@@ -1,13 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { useData, getOrderTotal } from '../DataContext';
+import { useLang } from '../LanguageContext';
+import InvoiceModal from '../components/InvoiceModal';
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const [year, month, day] = dateStr.split('-');
+  if (!year || !month || !day) return dateStr;
+  return `${day}/${month}/${year}`;
+}
 
 export default function Orders() {
   const { orders, materials, setOrderStatus, updateOrder, deleteOrder } = useData();
+  const { t } = useLang();
   const [tab, setTab] = useState('pending');
   const [search, setSearch] = useState('');
   const [detailOrder, setDetailOrder] = useState(null);
   const [editOrder, setEditOrder] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [invoiceOrder, setInvoiceOrder] = useState(null);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -50,38 +61,35 @@ export default function Orders() {
     setEditOrder(null);
   };
 
-  const tabStyle = (t) => ({
+  const tabStyle = (status) => ({
     padding: '8px 16px', borderRadius: 8, border: '1px solid #ddd', cursor: 'pointer', fontSize: 14,
     fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
-    background: tab === t ? '#1a1a2e' : 'white', color: tab === t ? 'white' : '#555',
+    background: tab === status ? '#1a1a2e' : 'white', color: tab === status ? 'white' : '#555',
     transition: 'all 0.2s'
   });
 
-  const Badge = ({ count }) => count > 0 ? (
-    <span style={{ background: tab === 'pending' && count ? '#ef4444' : '#e5e7eb', color: tab === 'pending' && count ? 'white' : '#374151', borderRadius: 6, padding: '1px 6px', fontSize: 12 }}>{count}</span>
-  ) : null;
 
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a1a2e' }}>Orders</h1>
-        <p style={{ color: '#888', marginTop: 4 }}>Manage and track all your stone orders</p>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: '#1a1a2e' }}>{t.ordersTitle}</h1>
+        <p style={{ color: '#888', marginTop: 4 }}>{t.ordersSub}</p>
       </div>
 
       {/* Search */}
       <div style={{ position: 'relative', marginBottom: 16 }}>
         <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }}>🔍</span>
-        <input className="search-bar" style={{ paddingLeft: 36, marginBottom: 0 }} placeholder="Search orders by name, material, location, phone..."
+        <input className="search-bar" style={{ paddingLeft: 36, marginBottom: 0 }} placeholder={t.searchOrders}
           value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {['pending', 'approved', 'declined'].map(t => (
-          <button key={t} style={tabStyle(t)} onClick={() => setTab(t)}>
-            {t === 'pending' ? '🕐' : t === 'approved' ? '✓' : '✕'}
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-            {counts[t] > 0 && <span style={{ background: t === 'pending' ? '#ef4444' : '#e5e7eb', color: t === 'pending' ? 'white' : '#374151', borderRadius: 6, padding: '1px 6px', fontSize: 11 }}>{counts[t]}</span>}
+        {['pending', 'approved', 'declined'].map(status => (
+          <button key={status} style={tabStyle(status)} onClick={() => setTab(status)}>
+            {status === 'pending' ? '🕐' : status === 'approved' ? '✓' : '✕'}
+            {status === 'pending' ? t.pending : status === 'approved' ? t.approved : t.declined}
+            {counts[status] > 0 && <span style={{ background: status === 'pending' ? '#ef4444' : '#e5e7eb', color: status === 'pending' ? 'white' : '#374151', borderRadius: 6, padding: '1px 6px', fontSize: 11 }}>{counts[status]}</span>}
           </button>
         ))}
       </div>
@@ -89,18 +97,18 @@ export default function Orders() {
       {filtered.length === 0 ? (
         <div style={{ background: 'white', borderRadius: 10, padding: '60px 20px', textAlign: 'center', border: '1px dashed #ddd' }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-          <div style={{ fontWeight: 600, color: '#555' }}>No orders</div>
-          <div style={{ color: '#aaa', fontSize: 14, marginTop: 4 }}>No {tab} orders at the moment</div>
+          <div style={{ fontWeight: 600, color: '#555' }}>{t.noOrders}</div>
+          <div style={{ color: '#aaa', fontSize: 14, marginTop: 4 }}>{t.noPendingOrders}</div>
         </div>
       ) : (
         <table className="table">
           <thead>
             <tr>
               <th>#</th>
-              <th>Full Name</th>
-              <th>Material(s)</th>
-              <th style={{ textAlign: 'right' }}>Price (EUR)</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
+              <th>{t.fullNameCol}</th>
+              <th>{t.materialCol}</th>
+              <th style={{ textAlign: 'right' }}>{t.priceCol}</th>
+              <th style={{ textAlign: 'right' }}>{t.actionsCol}</th>
             </tr>
           </thead>
           <tbody>
@@ -119,7 +127,7 @@ export default function Orders() {
                       {tab !== 'pending' && <button className="btn btn-yellow" onClick={() => setOrderStatus(order.id, 'pending')} title="Move to pending">🕐</button>}
                       {tab !== 'declined' && <button className="btn btn-red" onClick={() => setOrderStatus(order.id, 'declined')} title="Decline">✕</button>}
                       {tab !== 'approved' && <button className="btn btn-green" onClick={() => setOrderStatus(order.id, 'approved')} title="Approve">✓</button>}
-                      {tab === 'declined' && <button className="btn" style={{ background: '#fee2e2', color: '#ef4444' }} onClick={() => { if(window.confirm('Delete this order permanently?')) deleteOrder(order.id); }} title="Delete">🗑</button>}
+                      {tab === 'declined' && <button className="btn" style={{ background: '#fee2e2', color: '#ef4444' }} onClick={() => { if(window.confirm(t.deleteOrderConfirm)) deleteOrder(order.id); }} title="Delete">🗑</button>}
                     </div>
                   </td>
                 </tr>
@@ -133,12 +141,12 @@ export default function Orders() {
       {detailOrder && (
         <div className="modal-overlay" onClick={() => setDetailOrder(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-title">Order Details</div>
+            <div className="modal-title">{t.orderDetails}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14 }}>
               <div><strong>Full Name:</strong> {detailOrder.fullName}</div>
               <div><strong>Phone:</strong> {detailOrder.phoneNumber}</div>
               <div><strong>Location:</strong> {detailOrder.location || '—'}</div>
-              <div><strong>Due Date:</strong> {detailOrder.dueDate || '—'}</div>
+              <div><strong>Due Date:</strong> {formatDate(detailOrder.dueDate)}</div>
               <div><strong>Comment:</strong> {detailOrder.comment || '—'}</div>
               <hr />
               <strong>Materials:</strong>
@@ -161,8 +169,8 @@ export default function Orders() {
               <div style={{ fontWeight: 700, fontSize: 16 }}>Total: {getOrderTotal(detailOrder).toFixed(2)} EUR</div>
             </div>
             <div className="modal-actions">
-              <button className="btn btn-gray" onClick={() => setDetailOrder(null)}>Close</button>
-              <button className="btn btn-dark" onClick={() => window.print()}>🖨 Print</button>
+              <button className="btn btn-gray" onClick={() => setDetailOrder(null)}>{t.close}</button>
+              <button className="btn btn-dark" onClick={() => { setInvoiceOrder(detailOrder); setDetailOrder(null); }}>🖨 {t.print}</button>
             </div>
           </div>
         </div>
@@ -172,7 +180,7 @@ export default function Orders() {
       {editOrder && (
         <div className="modal-overlay" onClick={() => setEditOrder(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-title">Edit Order</div>
+            <div className="modal-title">{t.editOrder}</div>
             <div className="form-row">
               <div className="form-group">
                 <label>Full Name</label>
@@ -198,12 +206,18 @@ export default function Orders() {
               <textarea value={editForm.comment || ''} onChange={e => setEditForm(p => ({ ...p, comment: e.target.value }))} rows={3} />
             </div>
             <div className="modal-actions">
-              <button className="btn btn-gray" onClick={() => setEditOrder(null)}>Cancel</button>
-              <button className="btn btn-dark" onClick={handleEditSave}>Save Changes</button>
+              <button className="btn btn-gray" onClick={() => setEditOrder(null)}>{t.cancel}</button>
+              <button className="btn btn-dark" onClick={handleEditSave}>{t.saveChanges}</button>
             </div>
           </div>
         </div>
       )}
+      <InvoiceModal
+        order={invoiceOrder}
+        materials={materials}
+        open={!!invoiceOrder}
+        onClose={() => setInvoiceOrder(null)}
+      />
     </div>
   );
 }

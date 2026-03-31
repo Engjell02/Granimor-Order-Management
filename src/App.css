@@ -1,9 +1,9 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
 body { background-color: #f0f2f5; color: #1a1a2e; }
 .app { display: flex; flex-direction: column; height: 100vh; }
-.navbar { display: flex; align-items: center; background-color: #1a1a2e; padding: 0 30px; height: 60px; gap: 40px; }
+.navbar {display: flex;align-items: center;background-color: #1a1a2e;padding: 0 30px;height: 60px;gap: 20px;}
 .navbar-brand { color: #c9a84c; font-size: 22px; font-weight: 700; letter-spacing: 2px; }
-.navbar-links { display: flex; gap: 10px; }
+.navbar-links { display: flex; flex: 1; gap: 10px; }
 .nav-link { color: #aaaaaa; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; transition: all 0.2s; }
 .nav-link:hover { color: #ffffff; background-color: #2a2a4a; }
 .nav-link.active { color: #ffffff; background-color: #c9a84c; }
@@ -45,3 +45,9 @@ body { background-color: #f0f2f5; color: #1a1a2e; }
 .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
 .price-breakdown { font-size: 14px; line-height: 2; }
 .price-breakdown .total-line { border-top: 1px solid #ddd; padding-top: 4px; font-weight: 700; }
+@media print {
+  .navbar { display: none !important; }
+  .btn { display: none !important; }
+  .actions-cell { display: none !important; }
+  .page-content { padding: 0 !important; }
+}
